@@ -1,0 +1,6 @@
+.agent_memory/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env

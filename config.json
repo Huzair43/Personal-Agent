@@ -1,0 +1,8 @@
+{
+  "ollama_host": "http://127.0.0.1:11434",
+  "ollama_model": "phi4-mini",
+  "memory_dir": ".agent_memory",
+  "log_level": "INFO",
+  "api_host": "127.0.0.1",
+  "api_port": 8080
+}
