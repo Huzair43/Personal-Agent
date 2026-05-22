@@ -12,8 +12,10 @@ from agent.llm.ollama_client import OllamaClient
 from agent.memory.episodic import EpisodicMemory
 from agent.memory.semantic import SemanticMemory
 from agent.skills.base import AgentContext, Skill
+from agent.skills.browser import BrowseSkill
 from agent.skills.code_review import CodeReviewSkill
 from agent.skills.doc_summarizer import DocSummarizerSkill
+from agent.skills.explorer import ExplorerSkill
 from agent.skills.git_helper import GitHelperSkill
 from agent.skills.habits import HabitsSkill
 from agent.skills.llm_info import LLMInfoSkill
@@ -45,6 +47,8 @@ class AgentCore:
             CodeReviewSkill(),
             DocSummarizerSkill(),
             GitHelperSkill(),
+            ExplorerSkill(),
+            BrowseSkill(),
             RememberSkill(semantic),
             RecallSkill(semantic),
             HabitsSkill(),
