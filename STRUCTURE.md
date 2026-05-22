@@ -11,6 +11,7 @@ personal-agent/
     config.py
     llm/
       base.py
+      gemini_client.py
       ollama_client.py
     memory/
       episodic.py
@@ -57,6 +58,7 @@ Coeur du projet.
 Abstraction LLM.
 
 1. `agent/llm/base.py` : structures de messages (`LLMMessage`, rôles) et contrat minimal du client (`BaseLLMClient.chat(...)`).
+2. `agent/llm/gemini_client.py` : client HTTP Gemini (`models/gemini-3.5-flash:generateContent`), clé via `GEMINI_API_KEY`.
 2. `agent/llm/ollama_client.py` : implémentation Ollama (endpoint `POST /api/chat`) + listing best-effort des modèles via `GET /api/tags`.
 
 ### `agent/memory/`

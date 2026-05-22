@@ -32,6 +32,9 @@ Exemple
 
 1. Copier `.env.example` vers `.env`
 2. Ajuster `OLLAMA_MODEL` selon `ollama list`
+3. Optionnel, pour utiliser Gemini
+   1. Mettre `LLM_PROVIDER=gemini`
+   2. Mettre `GEMINI_API_KEY` et garder `GEMINI_MODEL=gemini-3.5-flash`
 
 ## Lancer
 
@@ -61,6 +64,20 @@ $env:CHANNEL="scheduler"
 python -m daemon.runner
 ```
 
+All in one
+
+```
+$env:CHANNEL="all"
+python -m daemon.runner
+```
+
+All in one with CLI
+
+```
+$env:CHANNEL="all-cli"
+python -m daemon.runner
+```
+
 ## API
 
 1. GET `/health`
@@ -72,6 +89,13 @@ Exemple curl
 curl http://127.0.0.1:8080/health
 curl -X POST http://127.0.0.1:8080/chat -H "Content-Type: application/json" -d "{\"text\":\"salut\",\"user_id\":\"demo\"}"
 ```
+
+## Notes
+
+1. Le canal API utilise FastAPI et uvicorn.
+2. Le scheduler peut être lancé seul via `CHANNEL=scheduler` ou automatiquement en arrière plan quand `CHANNEL=api` (modifiable avec `ENABLE_SCHEDULER_IN_API=0`).
+3. `CHANNEL=all` lance API et scheduler dans un seul process.
+4. `CHANNEL=all-cli` lance CLI et scheduler dans un seul process.
 
 ## Commandes CLI
 

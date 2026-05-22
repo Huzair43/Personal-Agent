@@ -6,11 +6,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from agent.env_loader import load_env_file
+
 
 @dataclass(frozen=True)
 class Config:
     ollama_host: str = "http://127.0.0.1:11434"
     ollama_model: str = "phi4-mini"
+    llm_provider: str = "ollama"
+    gemini_model: str = "gemini-3.5-flash"
+    gemini_api_key: str | None = None
 
     memory_dir: str = ".agent_memory"
     log_level: str = "INFO"
@@ -24,12 +29,15 @@ class Config:
     @staticmethod
     def from_env() -> "Config":
         return Config(
-            ollama_host=os.getenv("OLLAMA_HOST", Config.ollama_host),
-            ollama_model=os.getenv("OLLAMA_MODEL", Config.ollama_model),
-            memory_dir=os.getenv("AGENT_MEMORY_DIR", Config.memory_dir),
-            log_level=os.getenv("LOG_LEVEL", Config.log_level),
-            api_host=os.getenv("API_HOST", Config.api_host),
-            api_port=int(os.getenv("API_PORT", str(Config.api_port))),
+            ollama_host=os.getenv("OLLAMA_HOST") or "",
+            ollama_model=os.getenv("OLLAMA_MODEL") or "",
+            llm_provider=os.getenv("LLM_PROVIDER") or "",
+            gemini_model=os.getenv("GEMINI_MODEL") or "",
+            gemini_api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or None,
+            memory_dir=os.getenv("AGENT_MEMORY_DIR") or "",
+            log_level=os.getenv("LOG_LEVEL") or "",
+            api_host=os.getenv("API_HOST") or "",
+            api_port=int(os.getenv("API_PORT")) if os.getenv("API_PORT") else 0,
             telegram_token=os.getenv("TELEGRAM_TOKEN") or None,
             db_path=os.getenv("AGENT_DB_PATH") or None,
         )
@@ -43,25 +51,30 @@ class Config:
     def load(default_path: str = "config.json") -> "Config":
         """
         Priority:
-        1) config.json (if present)
-        2) environment variables
+        1) environment variables
+        2) config.json (if present)
         3) class defaults
         """
-        cfg = Config.from_env()
+        load_env_file(".env")
+        base = Config()
         p = Path(default_path)
         if p.is_file():
             try:
                 file_cfg = Config.from_file(p)
+                base = _merge(base, file_cfg)
             except Exception:
-                return cfg
-            return _merge(cfg, file_cfg)
-        return cfg
+                pass
+        env_cfg = Config.from_env()
+        return _merge(base, env_cfg)
 
 
 def _merge(base: Config, override: Config) -> Config:
     return Config(
         ollama_host=override.ollama_host or base.ollama_host,
         ollama_model=override.ollama_model or base.ollama_model,
+        llm_provider=override.llm_provider or base.llm_provider,
+        gemini_model=override.gemini_model or base.gemini_model,
+        gemini_api_key=override.gemini_api_key or base.gemini_api_key,
         memory_dir=override.memory_dir or base.memory_dir,
         log_level=override.log_level or base.log_level,
         api_host=override.api_host or base.api_host,

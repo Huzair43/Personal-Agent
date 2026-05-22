@@ -58,8 +58,11 @@ class TestConfig(unittest.TestCase):
             try:
                 os.chdir(td)
                 Path("config.json").write_text(json.dumps({"ollama_model": "from-file"}), encoding="utf-8")
+                old = dict(os.environ)
+                os.environ.pop("OLLAMA_MODEL", None)
                 cfg = Config.load()
             finally:
+                os.environ.clear()
+                os.environ.update(old)
                 os.chdir(cwd)
         self.assertEqual(cfg.ollama_model, "from-file")
-

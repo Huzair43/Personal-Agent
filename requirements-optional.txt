@@ -1,0 +1,8 @@
+# Dépendances optionnelles
+#
+# Index vectoriel rapide
+# Sur Windows, `hnswlib` peut nécessiter Microsoft C++ Build Tools pour compiler.
+hnswlib>=0.8.0
+
+# Si tu préfères utiliser le SDK officiel au lieu du wrapper HTTP maison
+google-genai>=0.6.0
