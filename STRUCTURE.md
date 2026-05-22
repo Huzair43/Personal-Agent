@@ -23,6 +23,7 @@ personal-agent/
       git_helper.py
       remember.py
       recall.py
+      habits.py
 
   channels/
     cli/
@@ -35,6 +36,9 @@ personal-agent/
   daemon/
     runner.py
     watcher.py
+    scheduler.py
+    ingest.py
+    habits.py
 
   config.json
   .gitignore
@@ -73,6 +77,7 @@ Commandes “outils” déclenchées via `/commande ...`.
 5. `agent/skills/git_helper.py` : `/git status|log` (commande Git minimale).
 6. `agent/skills/remember.py` : `/remember cle=valeur` (écrit dans la mémoire sémantique).
 7. `agent/skills/recall.py` : `/recall mot` (recherche dans la mémoire sémantique, sans appel LLM).
+8. `agent/skills/habits.py` : `/habits` (affiche des stats depuis la base SQLite).
 
 ### `channels/`
 Canaux d’entrées/sorties.
@@ -86,6 +91,9 @@ Lancement et tâches de fond.
 
 1. `daemon/runner.py` : lance un channel selon `CHANNEL=cli|api|telegram`.
 2. `daemon/watcher.py` : watcher simple (polling) pour détecter des changements de fichiers.
+3. `daemon/scheduler.py` : scheduler (jobs périodiques) + watcher temps réel pour ingestion.
+4. `daemon/ingest.py` : ingestion incrémentale de `episodic.jsonl` vers SQLite.
+5. `daemon/habits.py` : calcul de stats quotidiennes et profil semaine.
 
 ## Fichiers à la racine
 
@@ -108,6 +116,7 @@ Lancement et tâches de fond.
 5. `/git status`
 6. `/remember prenom=Huzair`
 7. `/recall prenom`
+8. `/habits week`
 
 ## Référence du code (par fichier)
 
@@ -222,6 +231,12 @@ Commande: `/recall`
 1. Recherche via `SemanticMemory.search(query)`
 2. Retourne les résultats sans appeler le LLM
 
+### `agent/skills/habits.py`
+Commande: `/habits`
+
+1. Lit les événements depuis SQLite
+2. Affiche des stats du jour ou de la semaine
+
 ### `channels/cli/main.py`
 Objectif: interface interactive.
 
@@ -253,3 +268,22 @@ Objectif: watcher simple sans dépendance.
 
 1. `watch_dir(path, interval_s=1.0, on_change=...)` parcourt récursivement et détecte les changements par `mtime`
 2. `main()` watch `WATCH_DIR` (par défaut `.`) et affiche les changements
+
+### `daemon/ingest.py`
+Objectif: ingestion incrémentale vers SQLite.
+
+1. `EpisodicIngestor` lit uniquement les nouvelles lignes de `episodic.jsonl` via un offset en bytes
+2. Insère chaque événement dans `events` (SQLite)
+
+### `daemon/habits.py`
+Objectif: calcul d habitudes.
+
+1. `compute_daily_habits(...)` calcule messages, heures actives et commandes du jour
+2. `compute_week_profile(...)` calcule un profil sur 7 jours
+
+### `daemon/scheduler.py`
+Objectif: exécuter des jobs et réagir en temps réel.
+
+1. Démarre un scheduler APScheduler
+2. Surveille `episodic.jsonl` via watchdog et déclenche l ingestion
+3. Mets à jour des stats périodiquement dans SQLite

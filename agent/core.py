@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+from pathlib import Path
+
 from agent.config import Config
 from agent.llm.base import LLMMessage, LLMRole, BaseLLMClient
 from agent.llm.ollama_client import OllamaClient
@@ -12,9 +14,11 @@ from agent.skills.base import AgentContext, Skill
 from agent.skills.code_review import CodeReviewSkill
 from agent.skills.doc_summarizer import DocSummarizerSkill
 from agent.skills.git_helper import GitHelperSkill
+from agent.skills.habits import HabitsSkill
 from agent.skills.recall import RecallSkill
 from agent.skills.remember import RememberSkill
 from agent.skills.tasks_planner import TasksPlannerSkill
+from agent.storage.db import AgentDB
 
 
 @dataclass
@@ -24,6 +28,7 @@ class AgentCore:
     episodic_memory: EpisodicMemory
     semantic_memory: SemanticMemory
     skills: list[Skill]
+    db: AgentDB | None = None
 
     @staticmethod
     def default() -> "AgentCore":
@@ -31,6 +36,7 @@ class AgentCore:
         llm = OllamaClient(host=config.ollama_host, model=config.ollama_model)
         episodic = EpisodicMemory.from_dir(config.memory_dir)
         semantic = SemanticMemory.from_dir(config.memory_dir)
+        db = AgentDB(Path(config.db_path)) if config.db_path else AgentDB.from_dir(config.memory_dir)
         skills: list[Skill] = [
             TasksPlannerSkill(),
             CodeReviewSkill(),
@@ -38,6 +44,7 @@ class AgentCore:
             GitHelperSkill(),
             RememberSkill(semantic),
             RecallSkill(semantic),
+            HabitsSkill(),
         ]
         return AgentCore(
             config=config,
@@ -45,6 +52,7 @@ class AgentCore:
             episodic_memory=episodic,
             semantic_memory=semantic,
             skills=skills,
+            db=db,
         )
 
     def list_commands(self) -> str:
@@ -70,11 +78,25 @@ class AgentCore:
             ctx = AgentContext(user_id=user_id, config=self.config)
             result = skill.run(args=args, ctx=ctx, llm=self.llm)
             self.episodic_memory.add_event(user_id=user_id, user_text=text, agent_text=result)
+            if self.db is not None:
+                try:
+                    import time
+
+                    self.db.insert_event(ts=time.time(), user_id=user_id, user_text=text, agent_text=result)
+                except Exception:
+                    pass
             return result
 
         messages = list(self._default_prompt(text, user_id=user_id))
         reply = self.llm.chat(messages)
         self.episodic_memory.add_event(user_id=user_id, user_text=text, agent_text=reply)
+        if self.db is not None:
+            try:
+                import time
+
+                self.db.insert_event(ts=time.time(), user_id=user_id, user_text=text, agent_text=reply)
+            except Exception:
+                pass
         return reply
 
     def _find_skill(self, name: str) -> Skill | None:
@@ -87,7 +109,7 @@ class AgentCore:
         system = (
             "Tu es un assistant local. Réponds en français de façon concise.\n"
             "Si l'utilisateur demande un plan, propose une liste d'étapes.\n"
-            "Commandes: /help, /plan, /review, /doc, /git, /remember, /recall."
+            "Commandes: /help, /plan, /review, /doc, /git, /remember, /recall, /habits."
         )
         yield LLMMessage(role=LLMRole.SYSTEM, content=system)
         ctx = self._memory_context(user_id=user_id, query=user_text)

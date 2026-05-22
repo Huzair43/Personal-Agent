@@ -11,12 +11,13 @@ def main() -> None:
         from channels.api.server import main as run
     elif channel == "telegram":
         from channels.telegram.bot import main as run
+    elif channel == "scheduler":
+        from daemon.scheduler import main as run
     else:
-        raise SystemExit("CHANNEL inconnu: cli | api | telegram")
+        raise SystemExit("CHANNEL inconnu: cli | api | telegram | scheduler")
 
     run()
 
 
 if __name__ == "__main__":
     main()
-

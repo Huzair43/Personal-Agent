@@ -19,6 +19,7 @@ class Config:
     api_port: int = 8080
 
     telegram_token: str | None = None
+    db_path: str | None = None
 
     @staticmethod
     def from_env() -> "Config":
@@ -30,6 +31,7 @@ class Config:
             api_host=os.getenv("API_HOST", Config.api_host),
             api_port=int(os.getenv("API_PORT", str(Config.api_port))),
             telegram_token=os.getenv("TELEGRAM_TOKEN") or None,
+            db_path=os.getenv("AGENT_DB_PATH") or None,
         )
 
     @staticmethod
@@ -65,6 +67,7 @@ def _merge(base: Config, override: Config) -> Config:
         api_host=override.api_host or base.api_host,
         api_port=override.api_port or base.api_port,
         telegram_token=override.telegram_token or base.telegram_token,
+        db_path=override.db_path or base.db_path,
     )
 
 

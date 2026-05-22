@@ -54,6 +54,13 @@ $env:CHANNEL="cli"
 python -m daemon.runner
 ```
 
+Scheduler
+
+```
+$env:CHANNEL="scheduler"
+python -m daemon.runner
+```
+
 ## API
 
 1. GET `/health`
@@ -75,8 +82,8 @@ curl -X POST http://127.0.0.1:8080/chat -H "Content-Type: application/json" -d "
 5. `/git status` ou `/git log`
 6. `/remember cle=valeur`
 7. `/recall mot`
+8. `/habits today` ou `/habits week`
 
 ## Documentation
 
 Voir `STRUCTURE.md` pour les détails de l organisation du code.
-
