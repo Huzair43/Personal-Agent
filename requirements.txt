@@ -1,0 +1,3 @@
+# Aucune dépendance externe obligatoire.
+# Python standard library uniquement.
+
