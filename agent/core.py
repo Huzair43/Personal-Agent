@@ -10,7 +10,10 @@ from agent.memory.episodic import EpisodicMemory
 from agent.memory.semantic import SemanticMemory
 from agent.skills.base import AgentContext, Skill
 from agent.skills.code_review import CodeReviewSkill
+from agent.skills.doc_summarizer import DocSummarizerSkill
 from agent.skills.git_helper import GitHelperSkill
+from agent.skills.recall import RecallSkill
+from agent.skills.remember import RememberSkill
 from agent.skills.tasks_planner import TasksPlannerSkill
 
 
@@ -28,7 +31,14 @@ class AgentCore:
         llm = OllamaClient(host=config.ollama_host, model=config.ollama_model)
         episodic = EpisodicMemory.from_dir(config.memory_dir)
         semantic = SemanticMemory.from_dir(config.memory_dir)
-        skills: list[Skill] = [TasksPlannerSkill(), CodeReviewSkill(), GitHelperSkill()]
+        skills: list[Skill] = [
+            TasksPlannerSkill(),
+            CodeReviewSkill(),
+            DocSummarizerSkill(),
+            GitHelperSkill(),
+            RememberSkill(semantic),
+            RecallSkill(semantic),
+        ]
         return AgentCore(
             config=config,
             llm=llm,
@@ -62,7 +72,7 @@ class AgentCore:
             self.episodic_memory.add_event(user_id=user_id, user_text=text, agent_text=result)
             return result
 
-        messages = list(self._default_prompt(text))
+        messages = list(self._default_prompt(text, user_id=user_id))
         reply = self.llm.chat(messages)
         self.episodic_memory.add_event(user_id=user_id, user_text=text, agent_text=reply)
         return reply
@@ -73,11 +83,42 @@ class AgentCore:
                 return skill
         return None
 
-    def _default_prompt(self, user_text: str) -> Iterable[LLMMessage]:
+    def _default_prompt(self, user_text: str, *, user_id: str) -> Iterable[LLMMessage]:
         system = (
             "Tu es un assistant local. Réponds en français de façon concise.\n"
             "Si l'utilisateur demande un plan, propose une liste d'étapes.\n"
-            "Commandes: /help, /plan, /review, /git."
+            "Commandes: /help, /plan, /review, /doc, /git, /remember, /recall."
         )
         yield LLMMessage(role=LLMRole.SYSTEM, content=system)
+        ctx = self._memory_context(user_id=user_id, query=user_text)
+        if ctx:
+            yield LLMMessage(role=LLMRole.SYSTEM, content=ctx)
         yield LLMMessage(role=LLMRole.USER, content=user_text)
+
+    def _memory_context(self, *, user_id: str, query: str) -> str:
+        """
+        Adds lightweight context from episodic + semantic memory.
+        Keep it short to avoid polluting the prompt.
+        """
+        parts: list[str] = []
+
+        recent = self.episodic_memory.tail(10)
+        if recent:
+            lines: list[str] = []
+            for ev in recent:
+                if ev.user_id != user_id:
+                    continue
+                u = (ev.user_text or "").replace("\n", " ").strip()
+                a = (ev.agent_text or "").replace("\n", " ").strip()
+                if not u or not a:
+                    continue
+                lines.append(f"U: {u}")
+                lines.append(f"A: {a}")
+            if lines:
+                parts.append("Contexte récent:\n" + "\n".join(lines[-12:]))
+
+        hits = self.semantic_memory.search(query, limit=5)
+        if hits:
+            parts.append("Rappels:\n" + "\n".join(f"{h.key}={h.value}" for h in hits))
+
+        return "\n\n".join(parts).strip()

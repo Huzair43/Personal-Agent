@@ -17,6 +17,21 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_GET(self) -> None:  # noqa: N802
+        if self.path.rstrip("/") != "/health":
+            self._send(404, {"error": "not_found"})
+            return
+
+        a = self.agent
+        self._send(
+            200,
+            {
+                "status": "ok",
+                "ollama_host": a.config.ollama_host,
+                "ollama_model": a.config.ollama_model,
+            },
+        )
+
     def do_POST(self) -> None:  # noqa: N802
         if self.path.rstrip("/") != "/chat":
             self._send(404, {"error": "not_found"})
@@ -27,6 +42,7 @@ class _Handler(BaseHTTPRequestHandler):
             raw = self.rfile.read(length).decode("utf-8", errors="replace")
             data = json.loads(raw or "{}")
             text = str(data.get("text", "")).strip()
+            user_id = str(data.get("user_id", "api")).strip() or "api"
         except Exception:
             self._send(400, {"error": "bad_request"})
             return
@@ -35,8 +51,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(400, {"error": "missing_text"})
             return
 
-        reply = self.agent.handle_message(text, user_id="api")
-        self._send(200, {"response": reply})
+        reply = self.agent.handle_message(text, user_id=user_id)
+        self._send(200, {"response": reply, "user_id": user_id})
 
     def log_message(self, format: str, *args) -> None:  # noqa: A002
         return
@@ -47,10 +63,9 @@ def main() -> None:
     host, port = agent.config.api_host, agent.config.api_port
     _Handler.agent = agent
     server = HTTPServer((host, port), _Handler)
-    print(f"API server sur http://{host}:{port} (POST /chat)")
+    print(f"API server sur http://{host}:{port} (GET /health, POST /chat)")
     server.serve_forever()
 
 
 if __name__ == "__main__":
     main()
-
