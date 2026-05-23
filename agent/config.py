@@ -11,9 +11,7 @@ from agent.env_loader import load_env_file
 
 @dataclass(frozen=True)
 class Config:
-    ollama_host: str = "http://127.0.0.1:11434"
-    ollama_model: str = "phi4-mini"
-    llm_provider: str = "ollama"
+    llm_provider: str = "gemini"
     gemini_model: str = "gemini-3.5-flash"
     gemini_api_key: str | None = None
 
@@ -29,8 +27,6 @@ class Config:
     @staticmethod
     def from_env() -> "Config":
         return Config(
-            ollama_host=os.getenv("OLLAMA_HOST") or "",
-            ollama_model=os.getenv("OLLAMA_MODEL") or "",
             llm_provider=os.getenv("LLM_PROVIDER") or "",
             gemini_model=os.getenv("GEMINI_MODEL") or "",
             gemini_api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or None,
@@ -70,8 +66,6 @@ class Config:
 
 def _merge(base: Config, override: Config) -> Config:
     return Config(
-        ollama_host=override.ollama_host or base.ollama_host,
-        ollama_model=override.ollama_model or base.ollama_model,
         llm_provider=override.llm_provider or base.llm_provider,
         gemini_model=override.gemini_model or base.gemini_model,
         gemini_api_key=override.gemini_api_key or base.gemini_api_key,

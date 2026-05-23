@@ -5,7 +5,7 @@ Projet Python minimal, organisé par modules, avec une interface CLI et une API 
 ## Prérequis
 
 1. Python 3.11 ou plus récent
-2. Ollama en cours d exécution sur la machine
+2. GEMINI_API_KEY (clé API Google Gemini)
 
 ## Installation
 
@@ -31,10 +31,8 @@ Deux options
 Exemple
 
 1. Copier `.env.example` vers `.env`
-2. Ajuster `OLLAMA_MODEL` selon `ollama list`
-3. Optionnel, pour utiliser Gemini
-   1. Mettre `LLM_PROVIDER=gemini`
-   2. Mettre `GEMINI_API_KEY` et garder `GEMINI_MODEL=gemini-3.5-flash`
+2. Mettre `GEMINI_API_KEY=votre-clé-api-google`
+3. Optionnel, personnaliser `GEMINI_MODEL=gemini-3.5-flash` (par défaut)
 
 ## Lancer
 

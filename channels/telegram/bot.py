@@ -29,14 +29,11 @@ def main() -> None:
         if not text:
             return
 
-        tg_user = update.effective_user
-        user_id = f"tg:{tg_user.id}" if tg_user else "tg:unknown"
-
         try:
-            reply = agent.handle_message(text, user_id=user_id)
+            reply = agent.handle_message(text, user_id="local")
         except Exception as exc:
             log.exception("telegram handler error")
-            reply = f"Erreur: {exc}"
+            reply = f"Error: {exc}"
 
         await update.message.reply_text(reply)
 

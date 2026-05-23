@@ -11,8 +11,7 @@ class TestConfig(unittest.TestCase):
     def test_from_env(self) -> None:
         old = dict(os.environ)
         try:
-            os.environ["OLLAMA_HOST"] = "http://example:11434"
-            os.environ["OLLAMA_MODEL"] = "my-model"
+            os.environ["GEMINI_API_KEY"] = "test-key"
             os.environ["AGENT_MEMORY_DIR"] = ".mem"
             os.environ["LOG_LEVEL"] = "DEBUG"
             os.environ["API_HOST"] = "0.0.0.0"
@@ -23,8 +22,7 @@ class TestConfig(unittest.TestCase):
             os.environ.clear()
             os.environ.update(old)
 
-        self.assertEqual(cfg.ollama_host, "http://example:11434")
-        self.assertEqual(cfg.ollama_model, "my-model")
+        self.assertEqual(cfg.gemini_api_key, "test-key")
         self.assertEqual(cfg.memory_dir, ".mem")
         self.assertEqual(cfg.log_level, "DEBUG")
         self.assertEqual(cfg.api_host, "0.0.0.0")
@@ -37,8 +35,7 @@ class TestConfig(unittest.TestCase):
             p.write_text(
                 json.dumps(
                     {
-                        "ollama_host": "http://x",
-                        "ollama_model": "m",
+                        "gemini_api_key": "test",
                         "memory_dir": ".m",
                         "log_level": "INFO",
                         "api_host": "127.0.0.1",
@@ -49,7 +46,7 @@ class TestConfig(unittest.TestCase):
                 encoding="utf-8",
             )
             cfg = Config.from_file(p)
-            self.assertEqual(cfg.ollama_host, "http://x")
+            self.assertEqual(cfg.gemini_api_key, "test")
             self.assertEqual(cfg.api_port, 8081)
 
     def test_load_prefers_config_file_when_present(self) -> None:
@@ -57,12 +54,12 @@ class TestConfig(unittest.TestCase):
             cwd = os.getcwd()
             try:
                 os.chdir(td)
-                Path("config.json").write_text(json.dumps({"ollama_model": "from-file"}), encoding="utf-8")
+                Path("config.json").write_text(json.dumps({"gemini_api_key": "from-file"}), encoding="utf-8")
                 old = dict(os.environ)
-                os.environ.pop("OLLAMA_MODEL", None)
+                os.environ.pop("GEMINI_API_KEY", None)
                 cfg = Config.load()
             finally:
                 os.environ.clear()
                 os.environ.update(old)
                 os.chdir(cwd)
-        self.assertEqual(cfg.ollama_model, "from-file")
+        self.assertEqual(cfg.gemini_api_key, "from-file")

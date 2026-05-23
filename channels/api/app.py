@@ -24,8 +24,8 @@ class ChatResponse(BaseModel):
 def health() -> dict:
     return {
         "status": "ok",
-        "ollama_host": _agent.config.ollama_host,
-        "ollama_model": _agent.config.ollama_model,
+        "llm_provider": _agent.config.llm_provider,
+        "gemini_model": _agent.config.gemini_model,
     }
 
 

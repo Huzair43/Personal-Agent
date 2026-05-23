@@ -8,11 +8,11 @@ from pathlib import Path
 from agent.config import Config
 from agent.llm.base import LLMMessage, LLMRole, BaseLLMClient
 from agent.llm.gemini_client import GeminiClient
-from agent.llm.ollama_client import OllamaClient
 from agent.memory.episodic import EpisodicMemory
 from agent.memory.semantic import SemanticMemory
 from agent.skills.base import AgentContext, Skill
 from agent.skills.browser import BrowseSkill
+from agent.skills.cd import CdSkill
 from agent.skills.code_review import CodeReviewSkill
 from agent.skills.doc_summarizer import DocSummarizerSkill
 from agent.skills.explorer import ExplorerSkill
@@ -23,7 +23,6 @@ from agent.skills.recall import RecallSkill
 from agent.skills.remember import RememberSkill
 from agent.skills.stats import StatsSkill
 from agent.skills.tasks_planner import TasksPlannerSkill
-from agent.skills.cd import CdSkill
 from agent.storage.db import AgentDB
 
 
@@ -160,9 +159,9 @@ class AgentCore:
 
 
 def _build_llm(config: Config) -> BaseLLMClient:
-    provider = (config.llm_provider or "ollama").strip().lower()
+    provider = (config.llm_provider or "gemini").strip().lower()
     if provider == "gemini":
         if not config.gemini_api_key:
-            return OllamaClient(host=config.ollama_host, model=config.ollama_model)
+            raise ValueError("GEMINI_API_KEY is required")
         return GeminiClient(api_key=config.gemini_api_key, model=config.gemini_model)
-    return OllamaClient(host=config.ollama_host, model=config.ollama_model)
+    raise ValueError(f"Unsupported LLM provider: {provider}. Only 'gemini' is supported.")

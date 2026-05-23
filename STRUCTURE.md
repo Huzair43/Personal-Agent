@@ -12,7 +12,6 @@ personal-agent/
     llm/
       base.py
       gemini_client.py
-      ollama_client.py
     memory/
       episodic.py
       semantic.py
@@ -25,6 +24,11 @@ personal-agent/
       remember.py
       recall.py
       habits.py
+      llm_info.py
+      stats.py
+      explorer.py
+      browser.py
+      cd.py
 
   channels/
     cli/
@@ -45,6 +49,8 @@ personal-agent/
   config.json
   .gitignore
   STRUCTURE.md
+  CACHE_INCREMENTAL.md
+  NAVIGATION_SKILLS.md
 ```
 
 ## Détails par dossier (résumé)
@@ -60,7 +66,6 @@ Abstraction LLM.
 
 1. `agent/llm/base.py` : structures de messages (`LLMMessage`, rôles) et contrat minimal du client (`BaseLLMClient.chat(...)`).
 2. `agent/llm/gemini_client.py` : client HTTP Gemini (`models/gemini-3.5-flash:generateContent`), clé via `GEMINI_API_KEY`.
-2. `agent/llm/ollama_client.py` : implémentation Ollama (endpoint `POST /api/chat`) + listing best-effort des modèles via `GET /api/tags`.
 
 ### `agent/memory/`
 Mémoire persistée sur disque (simple, sans dépendances externes).
@@ -81,6 +86,11 @@ Commandes “outils” déclenchées via `/commande ...`.
 6. `agent/skills/remember.py` : `/remember cle=valeur` (écrit dans la mémoire sémantique).
 7. `agent/skills/recall.py` : `/recall mot` (recherche dans la mémoire sémantique, sans appel LLM).
 8. `agent/skills/habits.py` : `/habits` (affiche des stats depuis la base SQLite).
+9. `agent/skills/llm_info.py` : `/llm` (affiche le provider et modele LLM).
+10. `agent/skills/stats.py` : `/stats` (etat tracking).
+11. `agent/skills/explorer.py` : `/explore` (explore et liste fichiers/dossiers avec arborescence).
+12. `agent/skills/browser.py` : `/browse` (lit et parcourt les fichiers, cherche du texte).
+13. `agent/skills/cd.py` : `/cd` (change de repertoire courant).
 
 ### `channels/`
 Canaux d’entrées/sorties.
@@ -101,7 +111,7 @@ Lancement et tâches de fond.
 
 ## Fichiers à la racine
 
-1. `config.json` : configuration par défaut (ex: `ollama_model`).
+1. `config.json` : configuration par défaut (ex: `gemini_api_key`).
 2. `.gitignore` : ignore la mémoire locale (`.agent_memory/`) et fichiers Python temporaires.
 3. `STRUCTURE.md` : ce document.
 

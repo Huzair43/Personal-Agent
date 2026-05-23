@@ -1,4 +1,4 @@
-""" Skill to navigate and list files/folders in the current directory."""
+""" Skill to navigate and list files/folders in the current directory.p"""
 from __future__ import annotations
 import os
 
@@ -12,6 +12,7 @@ from agent.llm.base import BaseLLMClient
 class CdSkill:
         
     name: str = "cd"
+    description: str = "Change directory. Usage: /cd /path/to/directory"
 
     def run(self, *, args: str, ctx, llm):
         target = Path(args).resolve()
