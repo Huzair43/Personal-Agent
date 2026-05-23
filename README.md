@@ -64,6 +64,13 @@ $env:CHANNEL="scheduler"
 python -m daemon.runner
 ```
 
+Telegram
+
+```
+$env:CHANNEL="telegram"
+python -m daemon.runner
+```
+
 All in one
 
 ```
@@ -96,6 +103,7 @@ curl -X POST http://127.0.0.1:8080/chat -H "Content-Type: application/json" -d "
 2. Le scheduler peut être lancé seul via `CHANNEL=scheduler` ou automatiquement en arrière plan quand `CHANNEL=api` (modifiable avec `ENABLE_SCHEDULER_IN_API=0`).
 3. `CHANNEL=all` lance API et scheduler dans un seul process.
 4. `CHANNEL=all-cli` lance CLI et scheduler dans un seul process.
+5. `CHANNEL=telegram` lance le bot Telegram (polling).
 
 ## Commandes CLI
 

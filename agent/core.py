@@ -23,6 +23,7 @@ from agent.skills.recall import RecallSkill
 from agent.skills.remember import RememberSkill
 from agent.skills.stats import StatsSkill
 from agent.skills.tasks_planner import TasksPlannerSkill
+from agent.skills.cd import CdSkill
 from agent.storage.db import AgentDB
 
 
@@ -54,6 +55,7 @@ class AgentCore:
             HabitsSkill(),
             LLMInfoSkill(),
             StatsSkill(),
+            CdSkill(),
         ]
         return AgentCore(
             config=config,

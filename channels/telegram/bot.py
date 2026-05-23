@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from agent.core import AgentCore
 
 
@@ -8,12 +10,42 @@ def main() -> None:
     if not agent.config.telegram_token:
         raise SystemExit("TELEGRAM_TOKEN manquant (env var).")
 
-    raise SystemExit(
-        "Bot Telegram non implémenté sans dépendances externes.\n"
-        "Recommandé: installer `python-telegram-bot` puis on branche le handler ici."
-    )
+    try:
+        from telegram import Update
+        from telegram.ext import Application, ContextTypes, MessageHandler, filters
+    except Exception as e:
+        raise SystemExit(
+            "Dépendance manquante.\n"
+            "Installe `python-telegram-bot` puis relance.\n"
+            f"Détail: {e}"
+        )
+
+    log = logging.getLogger("telegram")
+
+    async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: ARG001
+        if update.message is None:
+            return
+        text = (update.message.text or "").strip()
+        if not text:
+            return
+
+        tg_user = update.effective_user
+        user_id = f"tg:{tg_user.id}" if tg_user else "tg:unknown"
+
+        try:
+            reply = agent.handle_message(text, user_id=user_id)
+        except Exception as exc:
+            log.exception("telegram handler error")
+            reply = f"Erreur: {exc}"
+
+        await update.message.reply_text(reply)
+
+    application = Application.builder().token(agent.config.telegram_token).build()
+    application.add_handler(MessageHandler(filters.TEXT | filters.COMMAND, on_message))
+
+    print("Telegram bot actif. Ctrl+C pour arrêter.")
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
     main()
-

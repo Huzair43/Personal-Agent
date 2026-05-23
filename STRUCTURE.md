@@ -31,6 +31,7 @@ personal-agent/
       main.py
     api/
       server.py
+      app.py
     telegram/
       bot.py
 
@@ -85,8 +86,9 @@ Commandes “outils” déclenchées via `/commande ...`.
 Canaux d’entrées/sorties.
 
 1. `channels/cli/main.py` : interface CLI (REPL).
-2. `channels/api/server.py` : serveur HTTP minimal (GET `/health`, POST `/chat` avec `{"text":"...","user_id":"..."}`).
-3. `channels/telegram/bot.py` : stub (à implémenter quand on ajoute une lib Telegram).
+2. `channels/api/server.py` : lance uvicorn pour l API.
+3. `channels/api/app.py` : application FastAPI (routes `GET /health`, `POST /chat`).
+4. `channels/telegram/bot.py` : bot Telegram (polling) qui route vers `AgentCore`.
 
 ### `daemon/`
 Lancement et tâches de fond.
@@ -249,15 +251,21 @@ Objectif: interface interactive.
 ### `channels/api/server.py`
 Objectif: exposer une API HTTP minimale.
 
+1. Lance uvicorn et charge l application FastAPI
+
+### `channels/api/app.py`
+Objectif: routes HTTP.
+
 1. `GET /health` retourne un statut et la config LLM (host/modèle)
 2. `POST /chat` attend `{"text":"...","user_id":"..."}` (user_id optionnel)
 3. Retourne `{"response":"...","user_id":"..."}`
 
 ### `channels/telegram/bot.py`
-Objectif: placeholder Telegram.
+Objectif: canal Telegram.
 
 1. Vérifie `TELEGRAM_TOKEN`
-2. Quitte avec un message indiquant qu’une dépendance externe est nécessaire
+2. Démarre un bot Telegram (polling)
+3. Pour chaque message texte ou commande, appelle `AgentCore.handle_message(...)`
 
 ### `daemon/runner.py`
 Objectif: point d’entrée unique.
